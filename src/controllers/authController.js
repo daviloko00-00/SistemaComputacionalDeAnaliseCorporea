@@ -46,6 +46,7 @@ const authController = {
       const token = gerarEmailTokenJWT(novoUsuario.id);
 
       const expira_em = new Date(Date.now() + 1000 * 60 * 60); // 1 hora
+      //const expira_em = new Date(Date.now() + 1000 * 10); //10 segundos
 
       await emailTokenRepository.criar(novoUsuario.id, token, expira_em);
 

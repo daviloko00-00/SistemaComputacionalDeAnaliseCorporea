@@ -8,9 +8,17 @@
 
   <h2>Verificação de Email</h2>
   <p id="msg">Verificando...</p>
+  <p id="reauth" style="display:none;">
+    Token expirado ou inválido. Se não chegou o e-mail, você pode reenviar o link.
+  </p>
+  <button id="btnReenviar" style="display:none;">Reenviar e-mail</button>
+  <p style="margin-top: 6px;" id="btnReenviarHint"></p>
 
   <script>
   const msg = document.getElementById("msg");
+  const btnReenviar = document.getElementById("btnReenviar");
+  const reauth = document.getElementById("reauth");
+
 
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token");
@@ -28,18 +36,75 @@
 
         if (!response.ok) {
           msg.innerText = data.erro || "Erro ao verificar email";
+          // Mostra botão de reenvio para que o usuário peça um novo token
+          reauth.style.display = "block";
+          btnReenviar.style.display = "inline-block";
           return;
         }
 
         msg.innerText = data.msg;
+        reauth.style.display = "none";
+        btnReenviar.style.display = "none";
 
       } catch (error) {
         msg.innerText = "Erro: API não respondeu.";
+        // Mostra botão para o usuário reenviar, pois provavelmente o token expirou
+        // ou a chamada falhou por qualquer motivo.
+        reauth.style.display = "block";
+        btnReenviar.style.display = "inline-block";
       }
     }
 
     verificar();
   }
+
+  btnReenviar?.addEventListener('click', async () => {
+    try {
+      btnReenviar.disabled = true;
+      btnReenviar.innerText = 'Enviando...';
+
+      // IMPORTANTE: como a tela só tem o token na URL,
+      // precisamos do e-mail para reenviar.
+      // UX: pede via input na tela em vez de prompt().
+      let inputEmail = document.getElementById('inputEmail');
+      if (!inputEmail) {
+        inputEmail = document.createElement('input');
+        inputEmail.type = 'email';
+        inputEmail.id = 'inputEmail';
+        inputEmail.placeholder = 'seu-email@dominio.com';
+        inputEmail.style.marginRight = '8px';
+        reauth.parentElement.insertBefore(inputEmail, reauth.nextSibling);
+      }
+
+      const email = inputEmail.value;
+      if (!email || email.trim() === '') {
+        msg.innerText = 'Informe seu e-mail para reenviar o link.';
+        inputEmail.focus();
+        return;
+      }
+
+      const response = await fetch('/auth/reenviar-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        msg.innerText = data.erro || 'Erro ao reenviar e-mail';
+        return;
+      }
+
+      msg.innerText = data.msg || 'Verifique seu e-mail para um novo link de verificação.';
+      reauth.style.display = 'none';
+      btnReenviar.style.display = 'none';
+    } catch (error) {
+      msg.innerText = error.message || 'Erro ao reenviar.';
+    } finally {
+      btnReenviar.disabled = false;
+      btnReenviar.innerText = 'Reenviar e-mail';
+    }
+  });
 </script>
 
 </body>
