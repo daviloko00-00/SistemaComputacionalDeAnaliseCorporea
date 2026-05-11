@@ -1,10 +1,7 @@
 import prisma from "../database/prismaClient.js";
-
 const usuariosRepository = {
 
-  // ==========================
   // CREATE
-  // ==========================
   criar: async (usuario) => {
     const novoUsuario = await prisma.usuario.create({
       data: {
@@ -20,9 +17,7 @@ const usuariosRepository = {
     return novoUsuario;
   },
 
-  // ==========================
   // READ
-  // ==========================
   listar: async () => {
     return await prisma.usuario.findMany({
       orderBy: {
@@ -43,9 +38,7 @@ const usuariosRepository = {
     });
   },
 
-  // ==========================
   // UPDATE
-  // ==========================
   atualizar: async (id, usuario) => {
     const usuarioAtualizado = await prisma.usuario.update({
       where: { id: Number(id) },
@@ -72,18 +65,14 @@ const usuariosRepository = {
     });
   },
 
-  // ==========================
   // DELETE
-  // ==========================
   deletar: async (id) => {
     return await prisma.usuario.delete({
       where: { id: Number(id) }
     });
   },
 
-  // ==========================
   // DESATIVAR (mais seguro que deletar)
-  // ==========================
   desativar: async (id) => {
     return await prisma.usuario.update({
       where: { id: Number(id) },
@@ -102,9 +91,7 @@ const usuariosRepository = {
     });
   },
 
-  // ==========================
   // EMAIL VERIFICADO
-  // ==========================
   verificarEmail: async (id) => {
     return await prisma.usuario.update({
       where: { id: Number(id) },

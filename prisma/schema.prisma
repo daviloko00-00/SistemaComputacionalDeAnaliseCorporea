@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model Usuario {
@@ -117,7 +118,7 @@ model TreinoExercicio {
 
 model EmailVerificationToken {
   id        Int      @id @default(autoincrement())
-  token     String   @unique @db.Text
+  token     String   @unique @db.VarChar(512)
   usuarioId Int
   expira_em DateTime
   criado_em DateTime @default(now()) @db.Timestamp(0)

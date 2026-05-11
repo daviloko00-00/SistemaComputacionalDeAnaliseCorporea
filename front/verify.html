@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Verificar Email</title>
+</head>
+<body>
+
+  <h2>Verificação de Email</h2>
+  <p id="msg">Verificando...</p>
+
+  <script>
+  const msg = document.getElementById("msg");
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+
+  if (!token) {
+    msg.innerText = "Token não encontrado na URL.";
+  } else {
+    async function verificar() {
+      try {
+        const response = await fetch(
+          `/auth/verificar-email?token=${token}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          msg.innerText = data.erro || "Erro ao verificar email";
+          return;
+        }
+
+        msg.innerText = data.msg;
+
+      } catch (error) {
+        msg.innerText = "Erro: API não respondeu.";
+      }
+    }
+
+    verificar();
+  }
+</script>
+
+</body>
+</html>

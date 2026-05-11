@@ -5,9 +5,16 @@ import { gerarEmailTokenJWT } from "../utils/gerarTokens.js";
 import { enviarEmailVerificacao } from "../services/emailService.js";
 import { Usuario } from "../models/Usuarios.js";
 
+/**
+ * Controlador de autenticação e verificação de email.
+ */
 const authController = {
 
-  // CADASTRO
+  /**
+   * Cria um usuário, gera token de verificação e envia e-mail.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
   criar: async (req, res) => {
     try {
       const { nome, email, senha, data_nascimento } = req.body;
@@ -42,7 +49,7 @@ const authController = {
 
       await emailTokenRepository.criar(novoUsuario.id, token, expira_em);
 
-      const link = `${process.env.FRONT_URL}/verificar-email?token=${token}`;
+      const link = `${process.env.FRONT_URL}?token=${token}`;
 
       await enviarEmailVerificacao(novoUsuario.email, link);
 
@@ -55,6 +62,12 @@ const authController = {
     }
   },
 
+  /**
+   * Verifica o email do usuário usando o token informado na querystring.
+   * Se o token estiver expirado, remove o token e desativa o usuário.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
   // VERIFICAR EMAIL
   verificarEmail: async (req, res) => {
     try {
@@ -71,8 +84,14 @@ const authController = {
       }
 
       if (new Date(tokenEncontrado.expira_em) < new Date()) {
+        // Token expirado: remove o token e desativa o usuário correspondente
+        await emailTokenRepository.deletar(tokenEncontrado.id);
+        await usuariosRepository.desativar(tokenEncontrado.usuarioId);
+
         return res.status(400).json({ erro: "Token expirado" });
       }
+
+
 
       await usuariosRepository.verificarEmail(tokenEncontrado.usuarioId);
 
@@ -80,6 +99,46 @@ const authController = {
 
       return res.status(200).json({ msg: "Email verificado com sucesso!" });
 
+    } catch (error) {
+      return res.status(400).json({ erro: error.message });
+    }
+  },
+
+  /**
+   * Reenvia o email de verificação gerando um novo token.
+   * Remove tokens antigos do usuário e envia novo link.
+   * @param {import('express').Request} req
+   * @param {import('express').Response} res
+   */
+  // REENVIAR EMAIL (novo token)
+  reenviarEmail: async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email || typeof email !== "string" || email.trim() === "") {
+        return res.status(400).json({ erro: "Informe o email" });
+      }
+
+      const usuario = await usuariosRepository.buscarPorEmail(email.trim().toLowerCase());
+
+      // Mensagem genérica para não revelar se o email existe
+      if (!usuario) {
+        return res.status(200).json({ msg: "Se o email existir, enviaremos um novo link de verificação." });
+      }
+
+      // Recria o token (remove tokens antigos do usuário)
+      await emailTokenRepository.deletarPorUsuario(usuario.id);
+
+      const token = gerarEmailTokenJWT(usuario.id);
+      //const expira_em = new Date(Date.now() + 1000 * 60 * 60); // 1 hora
+      const expira_em = new Date(Date.now() + 1000 * 10); // 10 segundos para teste
+
+      await emailTokenRepository.criar(usuario.id, token, expira_em);
+
+      const link = `${process.env.FRONT_URL}?token=${token}`;
+      await enviarEmailVerificacao(usuario.email, link);
+
+      return res.status(200).json({ msg: "Novo link de verificação enviado para seu email." });
     } catch (error) {
       return res.status(400).json({ erro: error.message });
     }

@@ -5,5 +5,7 @@ const router = express.Router();
 
 router.post("/register", authController.criar);
 router.get("/verificar-email", authController.verificarEmail);
+router.post("/reenviar-email", authController.reenviarEmail);
+
 
 export default router;

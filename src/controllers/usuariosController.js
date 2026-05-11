@@ -3,7 +3,7 @@ import { Usuario } from "../models/Usuarios.js";
 import { gerarHashSenha } from "../utils/senhaHash.js";
 
 
-usuariosControllers = {
+const usuariosController = {
 
     criarUsuario: async (req, res) => {
         try {
@@ -47,4 +47,4 @@ usuariosControllers = {
 
 }
 
-export default usuariosControllers;
+export default usuariosController;
