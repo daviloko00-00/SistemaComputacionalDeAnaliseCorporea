@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Reenviar Verificação de Email</title>
+</head>
+<body>
+
+  <h2>Reenviar link de verificação</h2>
+  <p id="msg">Informe seu e-mail para receber um novo link.</p>
+
+  <!-- Modal -->
+  <div id="backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:999;"></div>
+  <div id="modal" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; padding:16px; border-radius:10px; z-index:1000; min-width: 360px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <strong>Reenviar link</strong>
+      <button id="btnFechar" style="border:none; background:transparent; font-size:18px; cursor:pointer;">&times;</button>
+    </div>
+
+    <p id="modalMsg" style="margin-top:0;" >Digite seu e-mail:</p>
+
+    <div style="display:flex; gap:8px; align-items:center;">
+      <input id="email" type="email" placeholder="seu-email@dominio.com" style="padding:8px; flex:1;" />
+    </div>
+
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px;">
+      <button id="btnCancelar" style="padding:8px 12px;">Cancelar</button>
+      <button id="btnEnviar" style="padding:8px 12px;">Enviar novo link</button>
+    </div>
+  </div>
+
+  <button id="btnAbrirModal" style="padding:8px 12px; margin-top:16px;">Abrir modal de reenvio</button>
+
+
+  <script>
+    const msg = document.getElementById('msg');
+    const btnEnviar = document.getElementById('btnEnviar');
+    const emailInput = document.getElementById('email');
+
+    btnEnviar.addEventListener('click', async () => {
+      try {
+        const email = (emailInput.value || '').trim();
+        if (!email) {
+          msg.innerText = 'Informe um e-mail válido.';
+          emailInput.focus();
+          return;
+        }
+
+        btnEnviar.disabled = true;
+        btnEnviar.innerText = 'Enviando...';
+        const link = "https://c312-2804-868-d057-4274-2886-64c9-196e-1bb6.ngrok-free.app";
+      const path = "/auth/reenviar-email"
+
+        const response = await fetch(link+path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        let data = null;
+        try {
+          data = await response.json();
+        } catch (e) {
+          // API pode retornar texto/HTML; evita quebrar o UX
+          data = null;
+        }
+
+        if (!response.ok) {
+          msg.innerText = (data && data.erro) ? data.erro : 'Erro ao reenviar o e-mail.';
+          return;
+        }
+
+        msg.innerText = (data && data.msg) ? data.msg : 'Enviamos um novo link de verificação. Verifique seu e-mail.';
+
+      } catch (error) {
+        msg.innerText = error.message || 'Erro de comunicação com a API.';
+      } finally {
+        btnEnviar.disabled = false;
+        btnEnviar.innerText = 'Enviar novo link';
+      }
+    });
+  </script>
+
+</body>
+</html>
+

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      width: 420px;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input {
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 10px 20px;
+      width: 100%;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
+
+    button:hover:not(:disabled) {
+      background: #0056b3;
+    }
+
+    #msg {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .erro {
+      color: #dc3545;
+    }
+
+    .sucesso {
+      color: #28a745;
+    }
+
+    .link-login {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .link-login a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .link-login a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Cadastro de Usuário</h2>
+
+    <form id="formCadastro">
+      <input type="text" id="nome" placeholder="Nome" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="senha" placeholder="Senha (mínimo 6 caracteres)" required />
+      <input type="date" id="data_nascimento" required />
+      <button type="submit" id="btnCadastro">Cadastrar</button>
+    </form>
+
+    <p id="msg"></p>
+
+    <div class="link-login">
+      <a href="login.html">Já tem conta? Faça login</a>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("formCadastro");
+    const msg = document.getElementById("msg");
+    const btnCadastro = document.getElementById("btnCadastro");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      btnCadastro.disabled = true;
+      btnCadastro.innerText = "Cadastrando...";
+      msg.innerText = "";
+
+      const nome = document.getElementById("nome").value;
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+      const data_nascimento = document.getElementById("data_nascimento").value;
+      const link = "https://7406-2804-868-d057-4274-2886-64c9-196e-1bb6.ngrok-free.app";
+      const path = "/auth/register"
+
+      try {
+        const response = await fetch(link+path, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ nome, email, senha, data_nascimento })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          msg.innerText = data.erro || "Erro no cadastro";
+          msg.className = "erro";
+          return;
+        }
+
+        msg.innerText = data.msg;
+        msg.className = "sucesso";
+
+      } catch (error) {
+        msg.innerText = "Erro: API não respondeu";
+        msg.className = "erro";
+      } finally {
+        btnCadastro.disabled = false;
+        btnCadastro.innerText = "Cadastrar";
+      }
+    });
+  </script>
+
+</body>
+</html>
